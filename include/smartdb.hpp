@@ -4,6 +4,7 @@
 
 namespace smartdb
 {
+	template<typename DBType>
 	class smartdb
 	{
 	public:
@@ -41,6 +42,6 @@ namespace smartdb
 		}
 
 	private:
-
+		DBType db_;
 	};
 }

@@ -23,10 +23,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\define.h">
+    <ClInclude Include="..\..\include\smartdb.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\smartdb.hpp">
+    <ClInclude Include="..\..\include\postgresql.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\pq_result.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\pq_row.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\pq_type.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
