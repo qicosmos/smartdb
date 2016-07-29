@@ -10,7 +10,7 @@ void test_pq_connect()
 	bool r = pq.connect(conninfo);
 	std::cout << r << std::endl;
 
-	auto& result = pq.excecute("select * from student");
+	const auto& result = pq.excecute("select * from student");
 	auto count = result.count();
 }
 
