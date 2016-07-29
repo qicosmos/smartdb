@@ -45,94 +45,6 @@ namespace smartdb
 		template<typename T>
 		T get(int column) const;
 
-		template<>
-		int8_t get<int8_t>(int column) const
-		{
-			assert(result_ != nullptr);
-			if (PQgetisnull(result_, current_row_no_, column))
-				return 0;
-			return *reinterpret_cast<int8_t*>(PQgetvalue(result_, current_row_no_, column));
-		}
-
-		template<>
-		int16_t get<int16_t>(int column) const
-		{
-			assert(result_ != nullptr);
-			if (PQgetisnull(result_, current_row_no_, column))
-				return 0;
-			return be16toh(*reinterpret_cast<int16_t*>(PQgetvalue(result_, current_row_no_, column)));
-		}
-
-		template<>
-		int32_t get<int32_t>(int column) const
-		{
-			assert(result_ != nullptr);
-			if (PQgetisnull(result_, current_row_no_, column))
-				return 0;
-			return be32toh(*reinterpret_cast<int32_t*>(PQgetvalue(result_, current_row_no_, column)));
-		}
-
-		template<>
-		int64_t get<int64_t>(int column) const
-		{
-			assert(result_ != nullptr);
-			if (PQgetisnull(result_, current_row_no_, column))
-				return 0;
-
-			return be64toh(*reinterpret_cast<int64_t*>(PQgetvalue(result_, current_row_no_, column)));
-		}
-
-		template<>
-		bool get<bool>(int column) const
-		{
-			assert(result_ != nullptr);
-			if (PQgetisnull(result_, current_row_no_, column))
-				return false;
-
-			return *reinterpret_cast<bool*>(PQgetvalue(result_, current_row_no_, column));
-		}
-
-		template<>
-		float get<float>(int column) const
-		{
-			assert(result_ != nullptr);
-			if (PQgetisnull(result_, current_row_no_, column))
-				return 0.f;
-
-			return *reinterpret_cast<float*>(be32toh(*reinterpret_cast<int32_t*>(PQgetvalue(result_, current_row_no_, column))));
-		}
-
-		template<>
-		double get<double>(int column) const
-		{
-			assert(result_ != nullptr);
-			if (PQgetisnull(result_, current_row_no_, column))
-				return 0.f;
-
-			return *reinterpret_cast<double*>(be64toh(*reinterpret_cast<int64_t*>(PQgetvalue(result_, current_row_no_, column))));
-		}
-
-		template<>
-		std::string get<std::string>(int column) const
-		{
-			assert(result_ != nullptr);
-			if (PQgetisnull(result_, current_row_no_, column))
-				return{};
-
-			int length = PQgetlength(result_, current_row_no_, column);
-			return std::string(PQgetvalue(result_, current_row_no_, column), length);
-		}
-
-		template<>
-		char get<char>(int column) const
-		{
-			assert(result_ != nullptr);
-			if (PQgetisnull(result_, current_row_no_, column))
-				return '\0';
-
-			return *PQgetvalue(result_, current_row_no_, column);
-		}
-
 	private:
 		friend class pq_result;
 
@@ -146,4 +58,92 @@ namespace smartdb
 		PGresult *result_;
 		int current_row_no_;
 	};
+
+	template<>
+	int8_t pq_row::get<int8_t>(int column) const
+	{
+		assert(result_ != nullptr);
+		if (PQgetisnull(result_, current_row_no_, column))
+			return 0;
+		return *reinterpret_cast<int8_t*>(PQgetvalue(result_, current_row_no_, column));
+	}
+
+	template<>
+	int16_t pq_row::get<int16_t>(int column) const
+	{
+		assert(result_ != nullptr);
+		if (PQgetisnull(result_, current_row_no_, column))
+			return 0;
+		return be16toh(*reinterpret_cast<int16_t*>(PQgetvalue(result_, current_row_no_, column)));
+	}
+
+	template<>
+	int32_t pq_row::get<int32_t>(int column) const
+	{
+		assert(result_ != nullptr);
+		if (PQgetisnull(result_, current_row_no_, column))
+			return 0;
+		return be32toh(*reinterpret_cast<int32_t*>(PQgetvalue(result_, current_row_no_, column)));
+	}
+
+	template<>
+	int64_t pq_row::get<int64_t>(int column) const
+	{
+		assert(result_ != nullptr);
+		if (PQgetisnull(result_, current_row_no_, column))
+			return 0;
+
+		return be64toh(*reinterpret_cast<int64_t*>(PQgetvalue(result_, current_row_no_, column)));
+	}
+
+	template<>
+	bool pq_row::get<bool>(int column) const
+	{
+		assert(result_ != nullptr);
+		if (PQgetisnull(result_, current_row_no_, column))
+			return false;
+
+		return *reinterpret_cast<bool*>(PQgetvalue(result_, current_row_no_, column));
+	}
+
+	template<>
+	float pq_row::get<float>(int column) const
+	{
+		assert(result_ != nullptr);
+		if (PQgetisnull(result_, current_row_no_, column))
+			return 0.f;
+
+		return *reinterpret_cast<float*>(be32toh(*reinterpret_cast<int32_t*>(PQgetvalue(result_, current_row_no_, column))));
+	}
+
+	template<>
+	double pq_row::get<double>(int column) const
+	{
+		assert(result_ != nullptr);
+		if (PQgetisnull(result_, current_row_no_, column))
+			return 0.f;
+
+		return *reinterpret_cast<double*>(be64toh(*reinterpret_cast<int64_t*>(PQgetvalue(result_, current_row_no_, column))));
+	}
+
+	template<>
+	std::string pq_row::get<std::string>(int column) const
+	{
+		assert(result_ != nullptr);
+		if (PQgetisnull(result_, current_row_no_, column))
+			return{};
+
+		int length = PQgetlength(result_, current_row_no_, column);
+		return std::string(PQgetvalue(result_, current_row_no_, column), length);
+	}
+
+	template<>
+	char pq_row::get<char>(int column) const
+	{
+		assert(result_ != nullptr);
+		if (PQgetisnull(result_, current_row_no_, column))
+			return '\0';
+
+		return *PQgetvalue(result_, current_row_no_, column);
+	}
 }
