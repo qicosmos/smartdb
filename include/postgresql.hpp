@@ -2,7 +2,6 @@
 #include <string>
 #include <cassert>
 #include <libpq-fe.h>
-#include "pq_row.hpp"
 #include "pq_result.hpp"
 
 namespace smartdb
