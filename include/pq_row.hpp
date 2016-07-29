@@ -36,10 +36,32 @@ namespace smartdb
 			return res;
 		}
 
+		int column_index(const char *column_name) const
+		{
+			assert(result_ != nullptr);
+			return PQfnumber(result_, column_name);
+		}
+
 		int column_num() const
 		{
 			assert(result_ != nullptr);
 			return PQnfields(result_);
+		}
+
+		Oid column_type(int column) const
+		{
+			assert(result_ != nullptr);
+			return PQftype(result_, column);
+		}
+
+		template<typename T>
+		T get(const char *column_name) const
+		{
+			const int index = column_index(column_name);
+			if (index == -1)
+				return{};
+
+			return get<T>(index);
 		}
 
 		template<typename T>
@@ -47,8 +69,8 @@ namespace smartdb
 
 	private:
 		friend class pq_result;
-
-		pq_row(PGresult * result, int row_no) : result_(result), current_row_no_(row_no) {}
+		friend class iterator;
+		pq_row(PGresult * result) : result_(result) {}
 
 		pq_row(const pq_row&) = delete;
 		pq_row& operator = (const pq_row&) = delete;
@@ -56,94 +78,95 @@ namespace smartdb
 		pq_row& operator = (const pq_row&&) = delete;
 
 		PGresult *result_;
-		int current_row_no_;
 	};
 
 	template<>
 	int8_t pq_row::get<int8_t>(int column) const
 	{
 		assert(result_ != nullptr);
-		if (PQgetisnull(result_, current_row_no_, column))
+		if (PQgetisnull(result_, 0, column))
 			return 0;
-		return *reinterpret_cast<int8_t*>(PQgetvalue(result_, current_row_no_, column));
+		return *reinterpret_cast<int8_t*>(PQgetvalue(result_, 0, column));
 	}
 
 	template<>
 	int16_t pq_row::get<int16_t>(int column) const
 	{
 		assert(result_ != nullptr);
-		if (PQgetisnull(result_, current_row_no_, column))
+		if (PQgetisnull(result_, 0, column))
 			return 0;
-		return be16toh(*reinterpret_cast<int16_t*>(PQgetvalue(result_, current_row_no_, column)));
+		return be16toh(*reinterpret_cast<int16_t*>(PQgetvalue(result_, 0, column)));
 	}
 
 	template<>
 	int32_t pq_row::get<int32_t>(int column) const
 	{
 		assert(result_ != nullptr);
-		if (PQgetisnull(result_, current_row_no_, column))
+		if (PQgetisnull(result_, 0, column))
 			return 0;
-		return be32toh(*reinterpret_cast<int32_t*>(PQgetvalue(result_, current_row_no_, column)));
+
+		return atoi(PQgetvalue(result_, 0, column));
+		//return be32toh(*reinterpret_cast<int32_t*>(PQgetvalue(result_, current_row_no_, column)));
 	}
 
 	template<>
 	int64_t pq_row::get<int64_t>(int column) const
 	{
 		assert(result_ != nullptr);
-		if (PQgetisnull(result_, current_row_no_, column))
+		if (PQgetisnull(result_, 0, column))
 			return 0;
 
-		return be64toh(*reinterpret_cast<int64_t*>(PQgetvalue(result_, current_row_no_, column)));
+		return *reinterpret_cast<int64_t*>(PQgetvalue(result_, 0, column));
 	}
 
 	template<>
 	bool pq_row::get<bool>(int column) const
 	{
 		assert(result_ != nullptr);
-		if (PQgetisnull(result_, current_row_no_, column))
+		if (PQgetisnull(result_, 0, column))
 			return false;
 
-		return *reinterpret_cast<bool*>(PQgetvalue(result_, current_row_no_, column));
+		return *reinterpret_cast<bool*>(PQgetvalue(result_, 0, column));
 	}
 
 	template<>
 	float pq_row::get<float>(int column) const
 	{
 		assert(result_ != nullptr);
-		if (PQgetisnull(result_, current_row_no_, column))
+		if (PQgetisnull(result_, 0, column))
 			return 0.f;
 
-		return *reinterpret_cast<float*>(be32toh(*reinterpret_cast<int32_t*>(PQgetvalue(result_, current_row_no_, column))));
+		return *reinterpret_cast<float*>(*reinterpret_cast<int32_t*>(PQgetvalue(result_, 0, column)));
 	}
 
 	template<>
 	double pq_row::get<double>(int column) const
 	{
 		assert(result_ != nullptr);
-		if (PQgetisnull(result_, current_row_no_, column))
+		if (PQgetisnull(result_, 0, column))
 			return 0.f;
 
-		return *reinterpret_cast<double*>(be64toh(*reinterpret_cast<int64_t*>(PQgetvalue(result_, current_row_no_, column))));
+		return *reinterpret_cast<double*>(be64toh(*reinterpret_cast<int64_t*>(PQgetvalue(result_, 0, column))));
 	}
 
 	template<>
 	std::string pq_row::get<std::string>(int column) const
 	{
 		assert(result_ != nullptr);
-		if (PQgetisnull(result_, current_row_no_, column))
+		if (PQgetisnull(result_, 0, column))
 			return{};
 
-		int length = PQgetlength(result_, current_row_no_, column);
-		return std::string(PQgetvalue(result_, current_row_no_, column), length);
+		int length = PQgetlength(result_, 0, column);
+		return std::string(PQgetvalue(result_, 0, column), length);
 	}
 
 	template<>
 	char pq_row::get<char>(int column) const
 	{
 		assert(result_ != nullptr);
-		if (PQgetisnull(result_, current_row_no_, column))
+		if (PQgetisnull(result_, 0, column))
 			return '\0';
 
-		return *PQgetvalue(result_, current_row_no_, column);
+		return *PQgetvalue(result_, 0, column);
 	}
 }

@@ -28,26 +28,70 @@ namespace smartdb
 			return true;
 		}
 
+		//because this mode is single row mode, so you can't get the total count, you can get count by sql.
 		template<typename... Args>
-		pq_result excecute(const std::string& strsql, Args&&... args)
+		pq_result execute(const std::string& strsql, Args&&... args)
 		{
-			assert(conn_ != nullptr);
-//			result_.clear();
-			PGresult* res = PQexec(conn_, strsql.c_str());
-			if (PQresultStatus(res) != PGRES_TUPLES_OK)
+			if (pgresult_)
 			{
-				return{};
+				clear();
+			}				
+
+			assert(conn_ != nullptr);
+
+			int success = PQsendQuery(conn_, strsql.c_str());
+			if (!success)
+			{
+				auto str = std::string(PQerrorMessage(conn_));
+				std::cout << str << std::endl;
+				throw std::exception();
 			}
+			
+			// Switch to the single row mode to avoid loading the all result in memory.
+			success = PQsetSingleRowMode(conn_);
+			assert(success);
+			pgresult_ = PQgetResult(conn_);
+			auto status = PQresultStatus(pgresult_);
+			return{ pgresult_, conn_, status };
+		}
 
-			//int success = PQsetSingleRowMode(conn_);
-			//assert(success);
-			//result_.first();
+		void clear()
+		{
+			auto status = PQresultStatus(pgresult_);
+			do {
+				PQclear(pgresult_);
+				pgresult_ = PQgetResult(conn_);
+				if (pgresult_ == nullptr) {
+					status = PGRES_EMPTY_QUERY;
+				}
+				else {
+					status = PQresultStatus(pgresult_);
+					switch (status) {
+					case PGRES_COMMAND_OK:
+						break;
 
-			return{ res, conn_ };
+					case PGRES_BAD_RESPONSE:
+					case PGRES_FATAL_ERROR:
+						throw std::exception();
+						break;
+
+					case PGRES_SINGLE_TUPLE:
+					case PGRES_TUPLES_OK:
+						// It is not supported to execute a multi statement sql
+						// without fetching the result with the result iterator.
+						assert(true);
+						break;
+
+					default:
+						assert(true);
+						break;
+					}
+				}
+			} while (status != PGRES_EMPTY_QUERY);
 		}
 
 		template<typename Tuple, typename... Args>
-		pq_result excecute(const std::string& strsql, const Tuple& tp)
+		pq_result execute(const std::string& strsql, const Tuple& tp)
 		{
 			return{};
 		}
@@ -74,5 +118,6 @@ namespace smartdb
 
 	private:
 		PGconn* conn_;
+		PGresult* pgresult_ = nullptr;
 	};
 }
